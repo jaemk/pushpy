@@ -1,0 +1,20 @@
+# startup
+    add the following to /etc/rc.local
+    nohup /absolute/path/to/file/pipushy.py > /dev/null 2>&1 &
+
+# make pipushy.py executable
+sudo chmod 755 pipushy.py
+
+# defualt root persmissions for camera interfacing/capture
+sudo chown root:root /absolute/path/to/file/cam.py
+sudo chmod 700
+
+sudo visudo 
+(under %sudo)
+username ALL=(ALL) NOPASSWD: /absolute/path/to/file/cam.py
+
+(at end)
+username ALL=(ALL:ALL) ALL
+
+*use absolute pathnames for everything
+*update pathnames in cam.py
