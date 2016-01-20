@@ -17,7 +17,6 @@ from pushbullet import Pushbullet
 Http_Proxy_Host = None
 Http_Proxy_Port = None
 
-
 class PushHandler(object):
     commands = ['send dog','send cat','still working?']
     # func_list set after class method defs
@@ -37,6 +36,8 @@ class PushHandler(object):
                 self.users_contact_info_names.append(peep.name)
 
     def receive(self, data):
+        ''' handle incoming data,
+            check data format and contents '''
         print('received data: \n{}'.format(data))
         print(data['type'])
         pushes = self.pb.get_pushes(self.lastpush)
@@ -52,31 +53,34 @@ class PushHandler(object):
             print('no data available...')
             return
         if push['dismissed'] == False:
-            print('\n' + data['type'] + ', pushtype: active')
-            print(push['body'])
+            print('\n{}, pushtype: active'.format(data['type']))
+            if 'body' in push:
+                print(push['body'])
             self.check_message(push)
         else:
-            print('\n' + data['type'] + ', pushtype: dismissed')
+            print('\n{}, pushtype: dismissed'.format(data['type']))
             return
 
     def check_message(self,push):
+        ''' route to proper method based on 
+            push message content '''
         message = push['body'].strip().lower()
         sender = push['sender_name']
         if message in self.commands:
             if sender in self.users:
                 self.pb.delete_push(push.get("iden"))
-                print('received command: ' + message)
-                self.func_list[self.commands.index(message)](self,sender)
+                print('received command: {}'.format(message))
+                self.func_list[self.commands.index(message)](self, sender)
             else:
-                print(sender + ' is not a verified user')
+                print('{} is not a verified user'.format(sender))
                 return
-        else: # message is not a command
-            return
 
-    def send_cam1(self,user):
+    def capture_send(self, user, cam=1):
+        ''' call cam.py on specified camera
+            upload and push picture to user '''
         if user == 'James Kominick':
             push = self.pb.push_note("", "Got it!")
-            subprocess.call(['{}/cam.py 1'.format(settings.BASE_DIR)], shell=True)
+            subprocess.call(['{}/cam.py {}'.format(settings.BASE_DIR, cam)], shell=True)
             with open('{}/picdump/picout.png'.format(settings.BASE_DIR),'rb') as pic:
                 pic_data = self.pb.upload_file(pic, "Here's your pic!")
             
@@ -85,28 +89,22 @@ class PushHandler(object):
             push = self.pb.push_note("", "Sorry, Only James can receive pictures.",
                                     contact = self.users_contact_info\
                                               [self.users_contact_info_names.index(user)])
-                
-    def send_cam2(self,user):
-        if user == 'James Kominick':
-            push = self.pb.push_note("", "Got it!")
-            subprocess.call(['{}/cam.py 2'.format(settings.BASE_DIR)], shell = True)
-            with open('{}/picdump/picout.png'.format(settings.BASE_DIR),'rb') as pic:
-                pic_data = self.pb.upload_file(pic, "Here's your pic!")
-    
-            push = self.pb.push_file(**pic_data)
-        else:
-            push = self.pb.push_note("", "Sorry, Only James can receive pictures.", 
-                                    contact = self.users_contact_info\
-                                              [self.users_contact_info_names.index(user)])
-            
+
+    def send_cam1(self, user):
+        self.capture_send(user, cam=1)
+
+    def send_cam2(self, user):
+        self.capture_send(user, cam=2)
+
     def send_confirm(self,user):
+        ''' confirm service is still running '''
         if user == 'James Kominick':
             push = self.pb.push_note("", "Yes, I'm still working!")
         else:
             push = self.pb.push_note("", "Hey {}! Yes, I'm still working!".format(user),
                                     contact = self.users_contact_info\
                                               [self.users_contact_info_names.index(user)])
-
+    # store actions to be called by 'check_message'
     func_list = [send_cam1, send_cam2, send_confirm]
 
 
@@ -124,7 +122,6 @@ def main():
         input('Press enter to exit \n>>')
         return
 
- 
     pb = Pushbullet(apikey)
     startup = pb.push_note("Pushy Listener Initiated", "auto start on reboot")
     handler = PushHandler(pb, users)
@@ -135,8 +132,9 @@ def main():
         http_proxy_port = Http_Proxy_Port)
     try:
         s.run_forever()
-    except KeyboardInterrupt:
-        close = pb.push_note("Pushy Listener Closed", "stopped")
+    except (Exception, KeyboardInterrupt) as exc:
+        close = pb.push_note('Pushy Listener Closed', '{}'.format(exc))
+    else:
         s.close()
 
 

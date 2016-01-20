@@ -1,16 +1,18 @@
 #!/usr/bin/python
 # ^ if you install opencv with apt-get
-# else if you compile from source, update to virtualenv
+# else if you compile from source, update to the virtualenv you installed it in
 
-
-import os, sys, time
+import os 
+import sys
+import time
 time1 = time.time()
 try:
     import cv2
 except:
     cv2 = None
 
-if cv2:
+
+def capture():
     name = sys.argv[0]
     cam = sys.argv[-1]
 
@@ -30,7 +32,16 @@ if cv2:
 
     cv2.imwrite(os.join(picdump, 'picout.png', frame)
     cap.release()
-    elap = time.time()-time1
+    elap = time.time() - time1
 
-    with open(cur_dir + '/picdump/captimes.log','a') as logfile:
-        logfile.write(str(elap) + '\n')
+    with open(os.path.join(cur_dir, '/picdump/captimes.log'),'a') as logfile:
+        logfile.write('{}\n'.format(elap))
+
+
+def main():
+    if cv2:
+        capture()
+
+
+if __name__ == '__main__':
+    main()

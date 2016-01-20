@@ -7,7 +7,7 @@
 # make executable:
 #   sudo chmod 755 run.py
 #
-# May need to change ownership of cam.py to root to access hardware
+# May need to change ownership of cam.py to root for access to hardware.
 # Default root permissions for opencv camera interfacing:
 #   sudo chown root:root /absolute/path/to/file/pushyapp/cam.py
 #   sudo chmod 700
@@ -19,7 +19,7 @@
 #   yourusername ALL=(ALL:ALL) ALL
 
 users = ['James Kominick']
-key = 'yourkeyhere'
+key = 'yoursecretapikey'
 
 import os
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
